@@ -1,2 +1,3 @@
 # ChatBoxL
 使用ListAdapter+DiffUtil+RecyclerView+RxJava+MVVM架构仿写了AI ChatBox
+利用DiffUtil实现了性能优化，利用RxJava实现了响应式网络请求
