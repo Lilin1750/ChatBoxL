@@ -11,43 +11,46 @@ import com.example.chatboxl.databinding.ItemMessageSentBinding
 import com.example.chatboxl.domain.model.Message
 
 class ChatAdapter: ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiffCallback()) {
-    var onItemClick:((Message)-> Unit) ?= null
+    var onLongItemClick:((Message,android.view.View)-> Unit) ?= null
 
     companion object{
         private const val VIEW_TYPE_SENT = 1
         private const val VIEW_TYPE_RECEIVED = 2
     }
 
-    /**
-     *ViewBinding为每一个布局文件生成一个Binding类
-     *每一个ViewHolder需要持有对应的Binding对象
-     *由此我们就可以通过获取对应的Binding对象来操作布局
-     * @param binding.root 就是对应的布局文件
-    */
     inner class ReceivedViewHolder(internal val binding: ItemMessageReceivedBinding): RecyclerView.ViewHolder(binding.root){
 
+        /**
+         *ViewBinding为每一个布局文件生成一个Binding类
+         *每一个ViewHolder需要持有对应的Binding对象
+         *由此我们就可以通过获取对应的Binding对象来操作布局
+         * @param binding.root 就是对应的布局文件
+         */
+
         init {
-            binding.root.setOnClickListener {
+            binding.root.setOnLongClickListener {
                 val position = bindingAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    onItemClick?.invoke(getItem(position))
+                    /**
+                     * 将 messageText 作为锚点传给 Activity
+                     */
+                    onLongItemClick?.invoke(getItem(position), binding.messageText)
                 }
+                true
             }
         }
-
     }
 
     inner class SentViewHolder(internal val binding: ItemMessageSentBinding): RecyclerView.ViewHolder(binding.root){
-
         init {
-            binding.root.setOnClickListener {
+            binding.root.setOnLongClickListener {
                 val position = bindingAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    onItemClick?.invoke(getItem(position))
+                    onLongItemClick?.invoke(getItem(position), binding.messageText)
                 }
+                true
             }
         }
-
     }
 
     override fun onCreateViewHolder(p0: ViewGroup, p1: Int): RecyclerView.ViewHolder {
@@ -75,7 +78,7 @@ class ChatAdapter: ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiffCall
         if (payload != null){
             partialBind(p0, getItem(p1), payload)
         }else{
-            super.onBindViewHolder(p0, p1, payloads)
+            fullBind(p0, getItem(p1))
         }
     }
 
@@ -89,6 +92,10 @@ class ChatAdapter: ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiffCall
     }
 
     private fun fullBind(holder: RecyclerView.ViewHolder, message: Message) {
+        /**
+         * 创建fullBind方法，用于完整更新
+         * 通过判断message的isSentByMe字段，将message对象传递给对应的ViewHolder进行绑定
+        */
         when (holder) {
             is SentViewHolder -> {
                 holder.binding.messageText.text = message.content
@@ -103,6 +110,10 @@ class ChatAdapter: ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiffCall
         }
     }
 
+    /**
+     * 创建partialBind方法，用于部分更新
+     * 通过遍历payload中的key，根据key更新对应的字段
+     */
     private fun partialBind(holder: RecyclerView.ViewHolder, message: Message, payload: Bundle) {
         when (holder) {
             is SentViewHolder -> {

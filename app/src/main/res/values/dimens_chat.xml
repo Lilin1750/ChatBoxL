@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 消息项间距 -->
+    <dimen name="chat_item_padding">12dp</dimen>
+    <dimen name="chat_avatar_size">44dp</dimen>
+    <dimen name="chat_avatar_margin">4dp</dimen>
+    <dimen name="chat_content_margin_start">12dp</dimen>
+
+    <!-- 消息气泡 -->
+    <dimen name="chat_bubble_padding_horizontal">16dp</dimen>
+    <dimen name="chat_bubble_padding_vertical">12dp</dimen>
+    <dimen name="chat_bubble_max_width">280dp</dimen>
+    <dimen name="chat_bubble_corner_radius">16dp</dimen>
+    <dimen name="chat_bubble_elevation">2dp</dimen>
+
+    <!-- 文本样式 -->
+    <dimen name="chat_name_text_size">13sp</dimen>
+    <dimen name="chat_message_text_size">15sp</dimen>
+    <dimen name="chat_time_text_size">11sp</dimen>
+    <dimen name="chat_line_spacing_extra">2dp</dimen>
+
+    <!-- 元素间距 -->
+    <dimen name="chat_name_bottom_margin">4dp</dimen>
+    <dimen name="chat_time_top_margin">4dp</dimen>
+
+    <!-- 输入区域 -->
+    <dimen name="chat_input_padding">12dp</dimen>
+    <dimen name="chat_input_margin_end">12dp</dimen>
+    <dimen name="chat_button_padding_horizontal">20dp</dimen>
+    <dimen name="chat_button_min_width">80dp</dimen>
+
+    <!-- RecyclerView -->
+    <dimen name="chat_recycler_padding_top">12dp</dimen>
+    <dimen name="chat_recycler_padding_bottom">100dp</dimen>
+</resources>

@@ -138,9 +138,15 @@ class ChatViewModel : ViewModel() {
     /*
      * 添加消息到列表
      */
-    private fun addMessage(message: Message) {
+    fun addMessage(message: Message) {
         val currentMessages = _messages.value?.toMutableList() ?: mutableListOf()
         currentMessages.add(message)
+        _messages.value = currentMessages
+    }
+
+    fun removeMessage(message: Message) {
+        val currentMessages = _messages.value?.toMutableList() ?: mutableListOf()
+        currentMessages.remove(message)
         _messages.value = currentMessages
     }
 

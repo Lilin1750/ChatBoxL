@@ -2,16 +2,20 @@ package com.example.chatboxl.presentation.chat
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.chatboxl.databinding.ActivityChatBinding
+import com.example.chatboxl.domain.model.Message
+import android.widget.PopupMenu
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.example.chatboxl.R
 
 class ChatActivity : AppCompatActivity() {
-
-    companion object {
-        private const val TAG = "ChatActivity"
-    }
 
     private val viewModel: ChatViewModel by viewModels()
     private var _binding: ActivityChatBinding? = null
@@ -23,6 +27,14 @@ class ChatActivity : AppCompatActivity() {
         _binding = ActivityChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        enableEdgeToEdge()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.linearLayout) { view , insets ->
+            val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            view.setPadding(0,0,0,imeHeight)
+            WindowInsetsCompat.CONSUMED
+        }
+
         val chatAdapter = ChatAdapter()
 
         binding.recyclerView.apply {
@@ -32,20 +44,6 @@ class ChatActivity : AppCompatActivity() {
             adapter = chatAdapter
         }
 
-        chatAdapter.registerAdapterDataObserver(object : androidx.recyclerview.widget.RecyclerView.AdapterDataObserver() {
-            /**
-             * 当RecyclerView中插入新项时回调，自动滚动到最新插入的项
-             * 用于确保新消息插入后能够自动显示在可视区域底部
-             *
-             * @param positionStart 插入项的起始位置
-             * @param itemCount 插入的项数量
-             * 这一段实现了RecyclerView滚动到最新插入项的功能
-             */
-            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                binding.recyclerView.scrollToPosition(positionStart + itemCount - 1)
-            }
-        })
-
         viewModel.messages.observe(this) { messages ->
             chatAdapter.submitList(messages.toList())
         }
@@ -54,7 +52,7 @@ class ChatActivity : AppCompatActivity() {
             val message = binding.editText.text.toString().trim()
             if (message.isNotEmpty()) {
                 viewModel.sendMessage(message)
-                binding.editText.text.clear()
+                binding.editText.text?.clear()
             }
         }
 
@@ -63,13 +61,58 @@ class ChatActivity : AppCompatActivity() {
                 val message = binding.editText.text.toString().trim()
                 if (message.isNotEmpty()) {
                     viewModel.sendMessage(message)
-                    binding.editText.text.clear()
+                    binding.editText.text?.clear()
                 }
                 true
             } else {
                 false
             }
         }
+
+        chatAdapter.onLongItemClick = { message, view ->
+            showActionMenu(message, view)
+            //就是在这里将anchorView传给了popupMenu，从这里拿的坐标
+        }
+    }
+
+    private fun showActionMenu(message: Message,anchorView: View) {
+
+        anchorView.post {
+            /**
+            val location1 = IntArray(2)
+            anchorView.getLocationOnScreen(location1)
+            Log.d("DEBUG", "创建 PopupMenu 时坐标: (${location1[0]}, ${location1[1]})")
+             */
+
+            val popup = PopupMenu(this, anchorView)
+
+            popup.menuInflater.inflate(R.menu.menu_message_actions,popup.menu )
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.action_delete -> {
+                        viewModel.removeMessage(message)
+                        true
+                    }
+                    R.id.action_copy -> {
+                        Toast.makeText( this, "模拟复制消息", Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
+            /**
+             * val location2 = IntArray(2)
+             * anchorView.getLocationOnScreen(location2)
+             * Log.d("DEBUG", "Popup 显示时坐标: (${location2[0]}, ${location2[1]})")
+             *
+             * android:windowSoftInputMode="adjustPan"这个设置呼出软键盘时，视图不重新绘制，所以两次测量坐标一样
+             * 但是又让view移动了，导致我菜单锚定不准
+            */
+        }
+        /** popupMenu位置显示正确，重点在于和anchorView的锚定
+         * popupMenu与anchorView的锚定的位置关系依靠gravity
+         */
     }
 
     override fun onDestroy() {
