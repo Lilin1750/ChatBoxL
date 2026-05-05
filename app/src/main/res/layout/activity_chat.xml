@@ -55,6 +55,10 @@
             app:boxStrokeWidth="1dp"
             app:boxStrokeWidthFocused="2dp"
             app:hintAnimationEnabled="true"
+            app:counterEnabled="true"
+            app:counterMaxLength="200"
+            app:counterTextAppearance="@style/TextAppearance.Design.Counter.Overflow"
+            app:endIconMode="clear_text"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -74,7 +78,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/send"
-            android:minWidth="80dp"/>
+            android:minWidth="80dp"
+            android:layout_marginEnd="12dp"/>
 
     </LinearLayout>
 

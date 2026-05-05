@@ -1,5 +1,6 @@
 package com.example.chatboxl.presentation.chat
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,6 +14,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.chatboxl.R
 
 class ChatActivity : AppCompatActivity() {
@@ -22,6 +24,7 @@ class ChatActivity : AppCompatActivity() {
     private val viewModel: ChatViewModel by viewModels()
     private var _binding: ActivityChatBinding? = null
     private val binding get() = _binding!!
+    private var keyboardShown = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,14 +38,18 @@ class ChatActivity : AppCompatActivity() {
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            val navigationBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            val navigationBarHeight =
+                insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
 
-            Log.d(TAG, "WindowInsets 集中处理: IME=$imeHeight, StatusBar=$statusBarHeight, NavBar=$navigationBarHeight")
+            Log.d(
+                TAG,
+                "WindowInsets 集中处理: IME=$imeHeight, StatusBar=$statusBarHeight, NavBar=$navigationBarHeight"
+            )
 
-            binding.appBar.setPadding(0, statusBarHeight, 0, 0)
+            keyboardShown = imeHeight > 0
 
-            if (imeHeight > 0) {
+            if (keyboardShown) {
                 // 软键盘弹出，让输入框避开键盘
                 binding.linearLayout.setPadding(0, 0, 0, imeHeight)
                 Log.d(TAG, "软键盘弹出，底部 padding=$imeHeight")
@@ -52,8 +59,10 @@ class ChatActivity : AppCompatActivity() {
                 Log.d(TAG, "软键盘收起，底部 padding=$navigationBarHeight")
             }
 
+            binding.appBar.setPadding(0, statusBarHeight, 0, 0)
+
             binding.recyclerView.setPadding(0, 0, 0, 0)
-            
+
             v.setPadding(0, 0, 0, 0)
 
             WindowInsetsCompat.CONSUMED
@@ -103,10 +112,21 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
+        binding.recyclerView.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                Log.d(TAG, "recyclerView: 滚动中, dx=$dx, dy=$dy")
+                if ( !keyboardShown && dy > 0) {
+                    showKeyboard(binding.editText)
+                } else if (dy < 0 && keyboardShown) {
+                    hideKeyboard(binding.editText)
+                }
+            }
+        })
+
         chatAdapter.onLongItemClick = { message, view ->
             Log.d(TAG, "onLongItemClick: 长按消息")
             showActionMenu(message, view)
-            //就是在这里将anchorView传给了popupMenu，从这里拿的坐标
         }
 
         Log.d(TAG, "onCreate: 完成")
@@ -122,6 +142,12 @@ class ChatActivity : AppCompatActivity() {
         Log.d(TAG, "onResume: 调用")
         Log.d(TAG, "onResume: 根布局宽度=${binding.main.width}, 高度=${binding.main.height}")
         Log.d(TAG, "onResume: 根布局可见性=${binding.main.visibility}")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy: 调用")
+        _binding = null
     }
 
     private fun showActionMenu(message: Message, anchorView: View) {
@@ -143,10 +169,12 @@ class ChatActivity : AppCompatActivity() {
                         viewModel.removeMessage(message)
                         true
                     }
+
                     R.id.action_copy -> {
                         Toast.makeText(this, "模拟复制消息", Toast.LENGTH_SHORT).show()
                         true
                     }
+
                     else -> false
                 }
             }
@@ -158,7 +186,7 @@ class ChatActivity : AppCompatActivity() {
              *
              * android:windowSoftInputMode="adjustPan"这个设置呼出软键盘时，视图不重新绘制，所以两次测量坐标一样
              * 但是又让view移动了，导致我菜单锚定不准
-            */
+             */
         }
 
         /** popupMenu位置显示正确，重点在于和anchorView的锚定
@@ -166,9 +194,19 @@ class ChatActivity : AppCompatActivity() {
          */
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy: 调用")
-        _binding = null
+    private fun showKeyboard(editText: View) {
+        if (!keyboardShown) {
+            editText.isFocusable = true
+            editText.isFocusableInTouchMode = true
+            editText.requestFocus()
+            WindowInsetsControllerCompat(window, editText).show(WindowInsetsCompat.Type.ime())
+        }
+    }
+
+    private fun hideKeyboard(editText: View) {
+        if (keyboardShown) {
+            editText.clearFocus()
+            WindowInsetsControllerCompat(window, editText).hide(WindowInsetsCompat.Type.ime())
+        }
     }
 }
